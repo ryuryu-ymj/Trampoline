@@ -1,0 +1,4 @@
+.vscode
+tsconfig.json
+*.map
+require.js
