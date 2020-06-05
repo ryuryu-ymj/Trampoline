@@ -49,7 +49,7 @@ canvas.addEventListener("touchend", () => {
     inputR = false;
 });*/
 
-let objectPool = new ObjectPool();
+let objectPool: ObjectPool;
 let state = 0;
 
 function render() {
@@ -58,6 +58,7 @@ function render() {
 
     switch (state) {
         case 0:
+            objectPool = new ObjectPool();
             objectPool.startLoadingStage();
             state = 1;
             break;
@@ -73,6 +74,9 @@ function render() {
         case 3:
             objectPool.draw();
             objectPool.update();
+            if (objectPool.isGameOver()) {
+                state = 0;
+            }
             break;
     }
     if (isMouseDown) isMouseDown = false;

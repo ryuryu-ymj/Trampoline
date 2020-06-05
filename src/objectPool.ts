@@ -122,8 +122,8 @@ export class ObjectPool {
             }
         }
         // カメラをballに追随
-        if (this.ball.center.screenY < canvas.height / 2) {
-            this.camera.abY = this.ball.center.abY;
+        if (this.ball.center.abY > this.camera.abY + 60) {
+            this.camera.abY = this.ball.center.abY - 60;
         }
         this.ball.update();
         this.trampolines.forEach(it => it.update());

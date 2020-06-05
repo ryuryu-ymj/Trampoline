@@ -231,8 +231,8 @@ define("objectPool", ["require", "exports", "main", "camera", "trampoline", "bal
                 }
             }
             // カメラをballに追随
-            if (this.ball.center.screenY < main_5.canvas.height / 2) {
-                this.camera.abY = this.ball.center.abY;
+            if (this.ball.center.abY > this.camera.abY + 60) {
+                this.camera.abY = this.ball.center.abY - 60;
             }
             this.ball.update();
             this.trampolines.forEach(it => it.update());
@@ -300,13 +300,14 @@ define("main", ["require", "exports", "objectPool"], function (require, exports,
         inputL = false;
         inputR = false;
     });*/
-    let objectPool = new objectPool_1.ObjectPool();
+    let objectPool;
     let state = 0;
     function render() {
         // 画面のクリア
         exports.ctx.clearRect(0, 0, exports.canvas.width, exports.canvas.height);
         switch (state) {
             case 0:
+                objectPool = new objectPool_1.ObjectPool();
                 objectPool.startLoadingStage();
                 state = 1;
                 break;
@@ -322,6 +323,9 @@ define("main", ["require", "exports", "objectPool"], function (require, exports,
             case 3:
                 objectPool.draw();
                 objectPool.update();
+                if (objectPool.isGameOver()) {
+                    state = 0;
+                }
                 break;
         }
         if (exports.isMouseDown)
