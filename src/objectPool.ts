@@ -91,98 +91,64 @@ export class ObjectPool {
                 //console.log(trampoline.getJumpPower());
             }
         }
-        { // blockとballの衝突判定 // TODO 要改善
-            //let max = this.ball.radius + Block.WIDTH / 2;
-            /*let minIndex = -1;
-            let minDistance = Math.pow(this.ball.RADIUS + Block.WIDTH / 2, 2);
-            for (let i = 0; i < this.blocks.length; i++) {
-                let distance = Math.pow(this.ball.center.abX - this.blocks[i].center.abX, 2) +
-                    Math.pow(this.ball.center.abY - this.blocks[i].center.abY, 2);
-                if (distance < minDistance) {
-                    minIndex = i;
-                    minDistance = distance;
-                }
-            }
-            if (minIndex != -1) {
-                if (this.blocks[minIndex] instanceof Spine) {
+
+        for (let i = 0; i < this.blocks.length; i++) {
+            let rx = this.ball.center.abX - this.blocks[i].center.abX;
+            let ry = this.ball.center.abY - this.blocks[i].center.abY;
+            if (rx >= - Block.WIDTH / 2 && rx <= Block.WIDTH / 2 &&
+                ry >= - Block.WIDTH / 2 && ry <= Block.WIDTH / 2) {
+                if (this.blocks[i] instanceof Spine) {
                     this._isGameOver = true;
-                }
-                let dx = this.ball.center.abX - this.blocks[minIndex].center.abX;
-                let dy = this.ball.center.abY - this.blocks[minIndex].center.abY;
-                let a = dy / dx;
-                if (a > -1 && a < 1) {
-                    //this.ball.boundX();
-                    if (dx > 0) {
-                        this.ball.boundToRight(this.blocks[minIndex].center.abX + Block.WIDTH / 2);
-                    } else {
-                        this.ball.boundToLeft(this.blocks[minIndex].center.abX - Block.WIDTH / 2);
-                    }
-                } else {
-                    //this.ball.boundY();
-                    if (dy > 0) {
-                        this.ball.boundUp(this.blocks[minIndex].center.abY + Block.WIDTH / 2);
-                    } else {
-                        this.ball.boundDown(this.blocks[minIndex].center.abY - Block.WIDTH / 2);
-                    }
-                }
-            }*/
-            for (let i = 0; i < this.blocks.length; i++) {
-                let rx = this.ball.center.abX - this.blocks[i].center.abX;
-                let ry = this.ball.center.abY - this.blocks[i].center.abY;
-                if (rx >= - Block.WIDTH / 2 && rx <= Block.WIDTH / 2 &&
-                    ry >= - Block.WIDTH / 2 && ry <= Block.WIDTH / 2) {
-                    if (this.blocks[i] instanceof Spine) {
-                        this._isGameOver = true;
-                        break;
-                    }
-                    let dir = 0;
-                    if (this.ball.dx > 0) {
-                        if (this.ball.dy > 0) {
-                            if (ry < ry) {
-                                dir = 3;
-                            } else {
-                                dir = 2;
-                            }
-                        } else {
-                            if (ry < -ry) {
-                                dir = 2;
-                            } else {
-                                dir = 1;
-                            }
-                        }
-                    } else {
-                        if (this.ball.dy > 0) {
-                            if (ry < -ry) {
-                                dir = 3;
-                            } else {
-                                dir = 0;
-                            }
-                        } else {
-                            if (ry < ry) {
-                                dir = 0;
-                            } else {
-                                dir = 1;
-                            }
-                        }
-                    }
-                    switch (dir) {
-                        case 0:
-                            this.ball.boundToRight(this.blocks[i].center.abX + Block.WIDTH / 2);
-                            break;
-                        case 1:
-                            this.ball.boundUp(this.blocks[i].center.abY + Block.WIDTH / 2);
-                            break;
-                        case 2:
-                            this.ball.boundToLeft(this.blocks[i].center.abX - Block.WIDTH / 2);
-                            break;
-                        case 3:
-                            this.ball.boundDown(this.blocks[i].center.abY - Block.WIDTH / 2);
-                            break;
-                    }
                     break;
                 }
+                let dir = 0;
+                if (this.ball.dx > 0) {
+                    if (this.ball.dy > 0) {
+                        if (ry < ry) {
+                            dir = 3;
+                        } else {
+                            dir = 2;
+                        }
+                    } else {
+                        if (ry < -ry) {
+                            dir = 2;
+                        } else {
+                            dir = 1;
+                        }
+                    }
+                } else {
+                    if (this.ball.dy > 0) {
+                        if (ry < -ry) {
+                            dir = 3;
+                        } else {
+                            dir = 0;
+                        }
+                    } else {
+                        if (ry < ry) {
+                            dir = 0;
+                        } else {
+                            dir = 1;
+                        }
+                    }
+                }
+                switch (dir) {
+                    case 0:
+                        this.ball.boundToRight(this.blocks[i].center.abX + Block.WIDTH / 2);
+                        break;
+                    case 1:
+                        this.ball.boundUp(this.blocks[i].center.abY + Block.WIDTH / 2);
+                        break;
+                    case 2:
+                        this.ball.boundToLeft(this.blocks[i].center.abX - Block.WIDTH / 2);
+                        break;
+                    case 3:
+                        this.ball.boundDown(this.blocks[i].center.abY - Block.WIDTH / 2);
+                        break;
+                }
+                break;
             }
         }
+
         // カメラをballに追随
         if (this.ball.center.abY > this.camera.abY + 60) {
             this.camera.abY = this.ball.center.abY - 60;
