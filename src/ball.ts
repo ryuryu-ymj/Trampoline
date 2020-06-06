@@ -4,8 +4,9 @@ import { Camera } from "./camera";
 
 export class Ball extends GameObject {
     center = new Point(0, 0);
-    readonly RADIUS = 5;
-    private readonly MAX_SPEED = 7;
+    static readonly RADIUS = 5;
+    private static readonly MAX_SPEED = 7;
+    private static readonly BOUND_COEF = 0.9;
     private _dx = 0;
     private _dy = 0;
     get dx() { return this._dx }
@@ -19,29 +20,29 @@ export class Ball extends GameObject {
     draw(): void {
         ctx.fillStyle = "orange";
         ctx.beginPath();
-        ctx.arc(this.center.screenX, this.center.screenY, this.RADIUS, 0, Math.PI * 2);
+        ctx.arc(this.center.screenX, this.center.screenY, Ball.RADIUS, 0, Math.PI * 2);
         ctx.fill();
     }
 
     update(): void {
-        if (this.center.screenX - this.RADIUS < 0) {
+        if (this.center.screenX - Ball.RADIUS < 0) {
             this._dx = -this._dx;
-        } else if (this.center.screenX + this.RADIUS > canvas.width) {
+        } else if (this.center.screenX + Ball.RADIUS > canvas.width) {
             this._dx = -this._dx;
         }
 
         this._dy -= 0.06;
-        if (this._dx > this.MAX_SPEED) {
-            this._dx = this.MAX_SPEED;
+        if (this._dx > Ball.MAX_SPEED) {
+            this._dx = Ball.MAX_SPEED;
         }
-        else if (this._dx < -this.MAX_SPEED) {
-            this._dx = -this.MAX_SPEED;
+        else if (this._dx < -Ball.MAX_SPEED) {
+            this._dx = -Ball.MAX_SPEED;
         }
-        if (this._dy > this.MAX_SPEED) {
-            this._dy = this.MAX_SPEED;
+        if (this._dy > Ball.MAX_SPEED) {
+            this._dy = Ball.MAX_SPEED;
         }
-        else if (this._dy < -this.MAX_SPEED) {
-            this._dy = -this.MAX_SPEED;
+        else if (this._dy < -Ball.MAX_SPEED) {
+            this._dy = -Ball.MAX_SPEED;
         }
         this.abX += this._dx;
         this.abY += this._dy;
@@ -63,22 +64,22 @@ export class Ball extends GameObject {
     }*/
 
     boundToRight(wallX: number) {
-        this._dx = -this._dx;
-        this.abX = wallX + this.RADIUS;
+        this._dx = -this._dx * Ball.BOUND_COEF;
+        this.abX = wallX + Ball.RADIUS;
     }
 
     boundToLeft(wallX: number) {
-        this._dx = -this._dx;
-        this.abX = wallX - this.RADIUS;
+        this._dx = -this._dx * Ball.BOUND_COEF;
+        this.abX = wallX - Ball.RADIUS;
     }
 
     boundUp(wallY: number) {
-        this._dy = -this._dy;
-        this.abY = wallY + this.RADIUS;
+        this._dy = -this._dy * Ball.BOUND_COEF;
+        this.abY = wallY + Ball.RADIUS;
     }
 
     boundDown(wallY: number) {
-        this._dy = -this._dy;
-        this.abY = wallY - this.RADIUS;
+        this._dy = -this._dy * Ball.BOUND_COEF;
+        this.abY = wallY - Ball.RADIUS;
     }
 }

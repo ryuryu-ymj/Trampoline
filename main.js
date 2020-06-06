@@ -235,8 +235,8 @@ define("objectPool", ["require", "exports", "main", "camera", "trampoline", "bal
             }
             { // blockとballの衝突判定 // TODO 要改善
                 //let max = this.ball.radius + Block.WIDTH / 2;
-                let minIndex = -1;
-                let minDistance = Math.pow(this.ball.RADIUS + block_3.Block.WIDTH / 2, 2);
+                /*let minIndex = -1;
+                let minDistance = Math.pow(this.ball.RADIUS + Block.WIDTH / 2, 2);
                 for (let i = 0; i < this.blocks.length; i++) {
                     let distance = Math.pow(this.ball.center.abX - this.blocks[i].center.abX, 2) +
                         Math.pow(this.ball.center.abY - this.blocks[i].center.abY, 2);
@@ -246,7 +246,7 @@ define("objectPool", ["require", "exports", "main", "camera", "trampoline", "bal
                     }
                 }
                 if (minIndex != -1) {
-                    if (this.blocks[minIndex] instanceof spine_2.Spine) {
+                    if (this.blocks[minIndex] instanceof Spine) {
                         this._isGameOver = true;
                     }
                     let dx = this.ball.center.abX - this.blocks[minIndex].center.abX;
@@ -255,20 +255,80 @@ define("objectPool", ["require", "exports", "main", "camera", "trampoline", "bal
                     if (a > -1 && a < 1) {
                         //this.ball.boundX();
                         if (dx > 0) {
-                            this.ball.boundToRight(this.blocks[minIndex].center.abX + block_3.Block.WIDTH / 2);
+                            this.ball.boundToRight(this.blocks[minIndex].center.abX + Block.WIDTH / 2);
+                        } else {
+                            this.ball.boundToLeft(this.blocks[minIndex].center.abX - Block.WIDTH / 2);
                         }
-                        else {
-                            this.ball.boundToLeft(this.blocks[minIndex].center.abX - block_3.Block.WIDTH / 2);
-                        }
-                    }
-                    else {
+                    } else {
                         //this.ball.boundY();
                         if (dy > 0) {
-                            this.ball.boundUp(this.blocks[minIndex].center.abY + block_3.Block.WIDTH / 2);
+                            this.ball.boundUp(this.blocks[minIndex].center.abY + Block.WIDTH / 2);
+                        } else {
+                            this.ball.boundDown(this.blocks[minIndex].center.abY - Block.WIDTH / 2);
+                        }
+                    }
+                }*/
+                for (let i = 0; i < this.blocks.length; i++) {
+                    let rx = this.ball.center.abX - this.blocks[i].center.abX;
+                    let ry = this.ball.center.abY - this.blocks[i].center.abY;
+                    if (rx >= -block_3.Block.WIDTH / 2 && rx <= block_3.Block.WIDTH / 2 &&
+                        ry >= -block_3.Block.WIDTH / 2 && ry <= block_3.Block.WIDTH / 2) {
+                        if (this.blocks[i] instanceof spine_2.Spine) {
+                            this._isGameOver = true;
+                            break;
+                        }
+                        let dir = 0;
+                        if (this.ball.dx > 0) {
+                            if (this.ball.dy > 0) {
+                                if (ry < ry) {
+                                    dir = 3;
+                                }
+                                else {
+                                    dir = 2;
+                                }
+                            }
+                            else {
+                                if (ry < -ry) {
+                                    dir = 2;
+                                }
+                                else {
+                                    dir = 1;
+                                }
+                            }
                         }
                         else {
-                            this.ball.boundDown(this.blocks[minIndex].center.abY - block_3.Block.WIDTH / 2);
+                            if (this.ball.dy > 0) {
+                                if (ry < -ry) {
+                                    dir = 3;
+                                }
+                                else {
+                                    dir = 0;
+                                }
+                            }
+                            else {
+                                if (ry < ry) {
+                                    dir = 0;
+                                }
+                                else {
+                                    dir = 1;
+                                }
+                            }
                         }
+                        switch (dir) {
+                            case 0:
+                                this.ball.boundToRight(this.blocks[i].center.abX + block_3.Block.WIDTH / 2);
+                                break;
+                            case 1:
+                                this.ball.boundUp(this.blocks[i].center.abY + block_3.Block.WIDTH / 2);
+                                break;
+                            case 2:
+                                this.ball.boundToLeft(this.blocks[i].center.abX - block_3.Block.WIDTH / 2);
+                                break;
+                            case 3:
+                                this.ball.boundDown(this.blocks[i].center.abY - block_3.Block.WIDTH / 2);
+                                break;
+                        }
+                        break;
                     }
                 }
             }
@@ -439,8 +499,6 @@ define("ball", ["require", "exports", "game_object", "main"], function (require,
         constructor(camera) {
             super(camera, main_8.canvas.width / 2, main_8.canvas.height / 2);
             this.center = new game_object_4.Point(0, 0);
-            this.RADIUS = 5;
-            this.MAX_SPEED = 7;
             this._dx = 0;
             this._dy = 0;
             this.setPoint(this.center);
@@ -450,28 +508,28 @@ define("ball", ["require", "exports", "game_object", "main"], function (require,
         draw() {
             main_8.ctx.fillStyle = "orange";
             main_8.ctx.beginPath();
-            main_8.ctx.arc(this.center.screenX, this.center.screenY, this.RADIUS, 0, Math.PI * 2);
+            main_8.ctx.arc(this.center.screenX, this.center.screenY, Ball.RADIUS, 0, Math.PI * 2);
             main_8.ctx.fill();
         }
         update() {
-            if (this.center.screenX - this.RADIUS < 0) {
+            if (this.center.screenX - Ball.RADIUS < 0) {
                 this._dx = -this._dx;
             }
-            else if (this.center.screenX + this.RADIUS > main_8.canvas.width) {
+            else if (this.center.screenX + Ball.RADIUS > main_8.canvas.width) {
                 this._dx = -this._dx;
             }
             this._dy -= 0.06;
-            if (this._dx > this.MAX_SPEED) {
-                this._dx = this.MAX_SPEED;
+            if (this._dx > Ball.MAX_SPEED) {
+                this._dx = Ball.MAX_SPEED;
             }
-            else if (this._dx < -this.MAX_SPEED) {
-                this._dx = -this.MAX_SPEED;
+            else if (this._dx < -Ball.MAX_SPEED) {
+                this._dx = -Ball.MAX_SPEED;
             }
-            if (this._dy > this.MAX_SPEED) {
-                this._dy = this.MAX_SPEED;
+            if (this._dy > Ball.MAX_SPEED) {
+                this._dy = Ball.MAX_SPEED;
             }
-            else if (this._dy < -this.MAX_SPEED) {
-                this._dy = -this.MAX_SPEED;
+            else if (this._dy < -Ball.MAX_SPEED) {
+                this._dy = -Ball.MAX_SPEED;
             }
             this.abX += this._dx;
             this.abY += this._dy;
@@ -489,22 +547,25 @@ define("ball", ["require", "exports", "game_object", "main"], function (require,
             this._dy = -this._dy;
         }*/
         boundToRight(wallX) {
-            this._dx = -this._dx;
-            this.abX = wallX + this.RADIUS;
+            this._dx = -this._dx * Ball.BOUND_COEF;
+            this.abX = wallX + Ball.RADIUS;
         }
         boundToLeft(wallX) {
-            this._dx = -this._dx;
-            this.abX = wallX - this.RADIUS;
+            this._dx = -this._dx * Ball.BOUND_COEF;
+            this.abX = wallX - Ball.RADIUS;
         }
         boundUp(wallY) {
-            this._dy = -this._dy;
-            this.abY = wallY + this.RADIUS;
+            this._dy = -this._dy * Ball.BOUND_COEF;
+            this.abY = wallY + Ball.RADIUS;
         }
         boundDown(wallY) {
-            this._dy = -this._dy;
-            this.abY = wallY - this.RADIUS;
+            this._dy = -this._dy * Ball.BOUND_COEF;
+            this.abY = wallY - Ball.RADIUS;
         }
     }
     exports.Ball = Ball;
+    Ball.RADIUS = 5;
+    Ball.MAX_SPEED = 7;
+    Ball.BOUND_COEF = 0.9;
 });
 //# sourceMappingURL=main.js.map
