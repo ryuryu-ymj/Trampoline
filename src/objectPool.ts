@@ -4,9 +4,11 @@ import { Trampoline } from "./trampoline";
 import { Ball } from "./ball";
 import { Block } from "./block";
 import { Stage } from "./stage";
+import { Spine } from "./spine";
 
 export class ObjectPool {
     private previousTime = new Date().getTime();
+    private _isGameOver = false;
 
     private camera = new Camera();
     private ball = new Ball(this.camera);
@@ -53,6 +55,7 @@ export class ObjectPool {
     }
 
     update() {
+        //console.log(this.blocks.length);
         // 経過時間の測定
         let presentTime = new Date().getTime();
         let delta = (presentTime - this.previousTime) / 1000;
@@ -88,7 +91,7 @@ export class ObjectPool {
                 //console.log(trampoline.getJumpPower());
             }
         }
-        { // blockとballの衝突判定
+        { // blockとballの衝突判定 // TODO 要改善
             //let max = this.ball.radius + Block.WIDTH / 2;
             let minIndex = -1;
             let minDistance = Math.pow(this.ball.RADIUS + Block.WIDTH / 2, 2);
@@ -101,6 +104,9 @@ export class ObjectPool {
                 }
             }
             if (minIndex != -1) {
+                if (this.blocks[minIndex] instanceof Spine) {
+                    this._isGameOver = true;
+                }
                 let dx = this.ball.center.abX - this.blocks[minIndex].center.abX;
                 let dy = this.ball.center.abY - this.blocks[minIndex].center.abY;
                 let a = dy / dx;
@@ -128,10 +134,14 @@ export class ObjectPool {
         this.ball.update();
         this.trampolines.forEach(it => it.update());
         this.blocks.forEach(it => it.update());
+
+        if (this.ball.center.screenY > canvas.height) {
+            this._isGameOver = true;
+        }
     }
 
     isGameOver() {
-        return this.ball.center.screenY > canvas.height;
+        return this._isGameOver;
     }
 
     /** 線分の交差判定 */

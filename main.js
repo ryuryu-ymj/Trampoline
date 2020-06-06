@@ -64,7 +64,37 @@ define("block", ["require", "exports", "game_object", "main"], function (require
     exports.Block = Block;
     Block.WIDTH = 20;
 });
-define("stage", ["require", "exports", "block", "main"], function (require, exports, block_1, main_4) {
+define("spine", ["require", "exports", "block", "main", "game_object"], function (require, exports, block_1, main_4, game_object_3) {
+    "use strict";
+    Object.defineProperty(exports, "__esModule", { value: true });
+    class Spine extends block_1.Block {
+        constructor(camera, abX, abY) {
+            super(camera, abX, abY);
+            this.shape = new Array(8);
+            const WIDTH = block_1.Block.WIDTH;
+            this.shape[0] = new game_object_3.Point(0, WIDTH / 2);
+            this.shape[1] = new game_object_3.Point(WIDTH / 6, WIDTH / 6);
+            this.shape[2] = new game_object_3.Point(WIDTH / 2, 0);
+            this.shape[3] = new game_object_3.Point(WIDTH / 6, -WIDTH / 6);
+            this.shape[4] = new game_object_3.Point(0, -WIDTH / 2);
+            this.shape[5] = new game_object_3.Point(-WIDTH / 6, -WIDTH / 6);
+            this.shape[6] = new game_object_3.Point(-WIDTH / 2, 0);
+            this.shape[7] = new game_object_3.Point(-WIDTH / 6, WIDTH / 6);
+            this.setPoints(this.shape);
+        }
+        draw() {
+            main_4.ctx.fillStyle = "gray";
+            main_4.ctx.beginPath();
+            main_4.ctx.moveTo(this.shape[0].screenX, this.shape[0].screenY);
+            for (let i = 1; i < this.shape.length; i++) {
+                main_4.ctx.lineTo(this.shape[i].screenX, this.shape[i].screenY);
+            }
+            main_4.ctx.fill();
+        }
+    }
+    exports.Spine = Spine;
+});
+define("stage", ["require", "exports", "block", "main", "spine"], function (require, exports, block_2, main_5, spine_1) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     class Stage {
@@ -104,8 +134,8 @@ define("stage", ["require", "exports", "block", "main"], function (require, expo
             }*/
         }
         addBlock(blocks, camera) {
-            if (camera.abY > this.loadAbY - main_4.canvas.height / 2) {
-                this.loadAbY += main_4.canvas.height / 2;
+            if (camera.abY > this.loadAbY - main_5.canvas.height / 2) {
+                this.loadAbY += main_5.canvas.height / 2;
                 while (true) {
                     if (this.loadLine >= this.csvData.length) {
                         break;
@@ -115,7 +145,14 @@ define("stage", ["require", "exports", "block", "main"], function (require, expo
                         break;
                     }
                     let abX = Number.parseInt(this.csvData[this.loadLine][1]);
-                    blocks.push(new block_1.Block(camera, abX, abY));
+                    switch (this.csvData[this.loadLine][0]) {
+                        case "block":
+                            blocks.push(new block_2.Block(camera, abX, abY));
+                            break;
+                        case "spine":
+                            blocks.push(new spine_1.Spine(camera, abX, abY));
+                            break;
+                    }
                     this.loadLine++;
                 }
             }
@@ -123,12 +160,13 @@ define("stage", ["require", "exports", "block", "main"], function (require, expo
     }
     exports.Stage = Stage;
 });
-define("objectPool", ["require", "exports", "main", "camera", "trampoline", "ball", "block", "stage"], function (require, exports, main_5, camera_1, trampoline_1, ball_1, block_2, stage_1) {
+define("objectPool", ["require", "exports", "main", "camera", "trampoline", "ball", "block", "stage", "spine"], function (require, exports, main_6, camera_1, trampoline_1, ball_1, block_3, stage_1, spine_2) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     class ObjectPool {
         constructor() {
             this.previousTime = new Date().getTime();
+            this._isGameOver = false;
             this.camera = new camera_1.Camera();
             this.ball = new ball_1.Ball(this.camera);
             this.trampolines = new Array();
@@ -152,19 +190,20 @@ define("objectPool", ["require", "exports", "main", "camera", "trampoline", "bal
             this.blocks.forEach(it => it.draw());
             this.trampolines.forEach(it => it.draw());
             this.ball.draw();
-            main_5.ctx.strokeStyle = "gray";
-            main_5.ctx.beginPath();
-            for (let x = 100 - this.camera.abX % 100; x < main_5.canvas.width; x += 100) {
-                main_5.ctx.moveTo(x, 0);
-                main_5.ctx.lineTo(x, main_5.canvas.height);
+            main_6.ctx.strokeStyle = "gray";
+            main_6.ctx.beginPath();
+            for (let x = 100 - this.camera.abX % 100; x < main_6.canvas.width; x += 100) {
+                main_6.ctx.moveTo(x, 0);
+                main_6.ctx.lineTo(x, main_6.canvas.height);
             }
-            for (let y = 100 - this.camera.abY % 100; y < main_5.canvas.height; y += 100) {
-                main_5.ctx.moveTo(0, main_5.canvas.height - y);
-                main_5.ctx.lineTo(main_5.canvas.width, main_5.canvas.height - y);
+            for (let y = 100 - this.camera.abY % 100; y < main_6.canvas.height; y += 100) {
+                main_6.ctx.moveTo(0, main_6.canvas.height - y);
+                main_6.ctx.lineTo(main_6.canvas.width, main_6.canvas.height - y);
             }
-            main_5.ctx.stroke();
+            main_6.ctx.stroke();
         }
         update() {
+            //console.log(this.blocks.length);
             // 経過時間の測定
             let presentTime = new Date().getTime();
             let delta = (presentTime - this.previousTime) / 1000;
@@ -172,14 +211,14 @@ define("objectPool", ["require", "exports", "main", "camera", "trampoline", "bal
             this.previousTime = presentTime;
             this.stage.addBlock(this.blocks, this.camera);
             {
-                if (this.blocks.some(it => { return it.center.screenY - block_2.Block.WIDTH / 2 > main_5.canvas.height; })) {
+                if (this.blocks.some(it => { return it.center.screenY - block_3.Block.WIDTH / 2 > main_6.canvas.height; })) {
                     this.blocks.shift();
                     //console.log("delete block");
                 }
             }
             // trampolineの追加
-            if (main_5.isMouseUp) {
-                this.trampolines.push(new trampoline_1.Trampoline(this.camera, main_5.mouseDownX, main_5.mouseDownY, main_5.mouseUpX, main_5.mouseUpY));
+            if (main_6.isMouseUp) {
+                this.trampolines.push(new trampoline_1.Trampoline(this.camera, main_6.mouseDownX, main_6.mouseDownY, main_6.mouseUpX, main_6.mouseUpY));
             }
             // 一定時間経過後のtrampolineを消去
             if (this.trampolines.some(it => { return !it.isActive(); })) {
@@ -194,10 +233,10 @@ define("objectPool", ["require", "exports", "main", "camera", "trampoline", "bal
                     //console.log(trampoline.getJumpPower());
                 }
             }
-            { // blockとballの衝突判定
+            { // blockとballの衝突判定 // TODO 要改善
                 //let max = this.ball.radius + Block.WIDTH / 2;
                 let minIndex = -1;
-                let minDistance = Math.pow(this.ball.RADIUS + block_2.Block.WIDTH / 2, 2);
+                let minDistance = Math.pow(this.ball.RADIUS + block_3.Block.WIDTH / 2, 2);
                 for (let i = 0; i < this.blocks.length; i++) {
                     let distance = Math.pow(this.ball.center.abX - this.blocks[i].center.abX, 2) +
                         Math.pow(this.ball.center.abY - this.blocks[i].center.abY, 2);
@@ -207,25 +246,28 @@ define("objectPool", ["require", "exports", "main", "camera", "trampoline", "bal
                     }
                 }
                 if (minIndex != -1) {
+                    if (this.blocks[minIndex] instanceof spine_2.Spine) {
+                        this._isGameOver = true;
+                    }
                     let dx = this.ball.center.abX - this.blocks[minIndex].center.abX;
                     let dy = this.ball.center.abY - this.blocks[minIndex].center.abY;
                     let a = dy / dx;
                     if (a > -1 && a < 1) {
                         //this.ball.boundX();
                         if (dx > 0) {
-                            this.ball.boundToRight(this.blocks[minIndex].center.abX + block_2.Block.WIDTH / 2);
+                            this.ball.boundToRight(this.blocks[minIndex].center.abX + block_3.Block.WIDTH / 2);
                         }
                         else {
-                            this.ball.boundToLeft(this.blocks[minIndex].center.abX - block_2.Block.WIDTH / 2);
+                            this.ball.boundToLeft(this.blocks[minIndex].center.abX - block_3.Block.WIDTH / 2);
                         }
                     }
                     else {
                         //this.ball.boundY();
                         if (dy > 0) {
-                            this.ball.boundUp(this.blocks[minIndex].center.abY + block_2.Block.WIDTH / 2);
+                            this.ball.boundUp(this.blocks[minIndex].center.abY + block_3.Block.WIDTH / 2);
                         }
                         else {
-                            this.ball.boundDown(this.blocks[minIndex].center.abY - block_2.Block.WIDTH / 2);
+                            this.ball.boundDown(this.blocks[minIndex].center.abY - block_3.Block.WIDTH / 2);
                         }
                     }
                 }
@@ -237,9 +279,12 @@ define("objectPool", ["require", "exports", "main", "camera", "trampoline", "bal
             this.ball.update();
             this.trampolines.forEach(it => it.update());
             this.blocks.forEach(it => it.update());
+            if (this.ball.center.screenY > main_6.canvas.height) {
+                this._isGameOver = true;
+            }
         }
         isGameOver() {
-            return this.ball.center.screenY > main_5.canvas.height;
+            return this._isGameOver;
         }
         /** 線分の交差判定 */
         static judgeIntersected(ax, ay, bx, by, cx, cy, dx, dy) {
@@ -336,7 +381,7 @@ define("main", ["require", "exports", "objectPool"], function (require, exports,
     }
     render();
 });
-define("game_object", ["require", "exports", "main"], function (require, exports, main_6) {
+define("game_object", ["require", "exports", "main"], function (require, exports, main_7) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     class GameObject {
@@ -347,8 +392,8 @@ define("game_object", ["require", "exports", "main"], function (require, exports
             this.points = new Array();
         }
         setScreenPosition(screenX, screenY) {
-            this.abX = screenX + this.camera.abX - main_6.canvas.width / 2;
-            this.abY = -screenY + this.camera.abY + main_6.canvas.height / 2;
+            this.abX = screenX + this.camera.abX - main_7.canvas.width / 2;
+            this.abY = -screenY + this.camera.abY + main_7.canvas.height / 2;
         }
         setPoint(point) {
             this.points[0] = point;
@@ -359,8 +404,8 @@ define("game_object", ["require", "exports", "main"], function (require, exports
             this.update();
         }
         update() {
-            let screenX = this.abX - this.camera.abX + main_6.canvas.width / 2;
-            let screenY = -this.abY + this.camera.abY + main_6.canvas.height / 2;
+            let screenX = this.abX - this.camera.abX + main_7.canvas.width / 2;
+            let screenY = -this.abY + this.camera.abY + main_7.canvas.height / 2;
             this.points.forEach(it => it.update(this.abX, this.abY, screenX, screenY));
         }
     }
@@ -387,13 +432,13 @@ define("game_object", ["require", "exports", "main"], function (require, exports
     }
     exports.Point = Point;
 });
-define("ball", ["require", "exports", "game_object", "main"], function (require, exports, game_object_3, main_7) {
+define("ball", ["require", "exports", "game_object", "main"], function (require, exports, game_object_4, main_8) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
-    class Ball extends game_object_3.GameObject {
+    class Ball extends game_object_4.GameObject {
         constructor(camera) {
-            super(camera, main_7.canvas.width / 2, main_7.canvas.height / 2);
-            this.center = new game_object_3.Point(0, 0);
+            super(camera, main_8.canvas.width / 2, main_8.canvas.height / 2);
+            this.center = new game_object_4.Point(0, 0);
             this.RADIUS = 5;
             this.MAX_SPEED = 7;
             this._dx = 0;
@@ -403,16 +448,16 @@ define("ball", ["require", "exports", "game_object", "main"], function (require,
         get dx() { return this._dx; }
         get dy() { return this._dy; }
         draw() {
-            main_7.ctx.fillStyle = "orange";
-            main_7.ctx.beginPath();
-            main_7.ctx.arc(this.center.screenX, this.center.screenY, this.RADIUS, 0, Math.PI * 2);
-            main_7.ctx.fill();
+            main_8.ctx.fillStyle = "orange";
+            main_8.ctx.beginPath();
+            main_8.ctx.arc(this.center.screenX, this.center.screenY, this.RADIUS, 0, Math.PI * 2);
+            main_8.ctx.fill();
         }
         update() {
             if (this.center.screenX - this.RADIUS < 0) {
                 this._dx = -this._dx;
             }
-            else if (this.center.screenX + this.RADIUS > main_7.canvas.width) {
+            else if (this.center.screenX + this.RADIUS > main_8.canvas.width) {
                 this._dx = -this._dx;
             }
             this._dy -= 0.06;

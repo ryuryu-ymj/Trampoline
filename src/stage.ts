@@ -2,6 +2,7 @@ import { GameObject } from "./game_object";
 import { Block } from "./block";
 import { Camera } from "./camera";
 import { canvas } from "./main";
+import { Spine } from "./spine";
 
 export class Stage {
     private _isLoading = false;
@@ -42,7 +43,7 @@ export class Stage {
     addBlock(blocks: Block[], camera: Camera) {
         if (camera.abY > this.loadAbY - canvas.height / 2) {
             this.loadAbY += canvas.height / 2;
-            while(true) {
+            while (true) {
                 if (this.loadLine >= this.csvData.length) {
                     break;
                 }
@@ -51,7 +52,14 @@ export class Stage {
                     break;
                 }
                 let abX = Number.parseInt(this.csvData[this.loadLine][1]);
-                blocks.push(new Block(camera, abX, abY));
+                switch (this.csvData[this.loadLine][0]) {
+                    case "block":
+                        blocks.push(new Block(camera, abX, abY));
+                        break;
+                    case "spine":
+                        blocks.push(new Spine(camera, abX, abY));
+                        break;
+                }
                 this.loadLine++;
             }
         }
