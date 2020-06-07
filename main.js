@@ -51,8 +51,12 @@ define("block", ["require", "exports", "game_object", "main"], function (require
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     class Block extends game_object_2.GameObject {
-        constructor(camera, abX, abY) {
+        constructor(camera, abX, abY, rightIsBlock, leftIsBlock, upIsBlock, downIsBlock) {
             super(camera, abX, abY);
+            this.rightIsBlock = rightIsBlock;
+            this.leftIsBlock = leftIsBlock;
+            this.upIsBlock = upIsBlock;
+            this.downIsBlock = downIsBlock;
             this.center = new game_object_2.Point(0, 0);
             this.setPoint(this.center);
         }
@@ -69,7 +73,7 @@ define("spine", ["require", "exports", "block", "main", "game_object"], function
     Object.defineProperty(exports, "__esModule", { value: true });
     class Spine extends block_1.Block {
         constructor(camera, abX, abY) {
-            super(camera, abX, abY);
+            super(camera, abX, abY, false, false, false, false);
             this.shape = new Array(8);
             const WIDTH = block_1.Block.WIDTH;
             this.shape[0] = new game_object_3.Point(0, WIDTH / 2);
@@ -147,7 +151,11 @@ define("stage", ["require", "exports", "block", "main", "spine"], function (requ
                     let abX = Number.parseInt(this.csvData[this.loadLine][1]);
                     switch (this.csvData[this.loadLine][0]) {
                         case "block":
-                            blocks.push(new block_2.Block(camera, abX, abY));
+                            let rightIsBlock = this.csvData[this.loadLine][3] == "true";
+                            let leftIsBlock = this.csvData[this.loadLine][4] == "true";
+                            let upIsBlock = this.csvData[this.loadLine][5] == "true";
+                            let downIsBlock = this.csvData[this.loadLine][6] == "true";
+                            blocks.push(new block_2.Block(camera, abX, abY, rightIsBlock, leftIsBlock, upIsBlock, downIsBlock));
                             break;
                         case "spine":
                             blocks.push(new spine_1.Spine(camera, abX, abY));
@@ -236,16 +244,29 @@ define("objectPool", ["require", "exports", "main", "camera", "trampoline", "bal
             for (let i = 0; i < this.blocks.length; i++) {
                 let rx = this.ball.center.abX - this.blocks[i].center.abX;
                 let ry = this.ball.center.abY - this.blocks[i].center.abY;
-                if (rx >= -block_3.Block.WIDTH / 2 && rx <= block_3.Block.WIDTH / 2 &&
-                    ry >= -block_3.Block.WIDTH / 2 && ry <= block_3.Block.WIDTH / 2) {
+                if (rx >= -block_3.Block.WIDTH / 2 - ball_1.Ball.RADIUS && rx <= block_3.Block.WIDTH / 2 + ball_1.Ball.RADIUS &&
+                    ry >= -block_3.Block.WIDTH / 2 - ball_1.Ball.RADIUS && ry <= block_3.Block.WIDTH / 2 + ball_1.Ball.RADIUS) {
                     if (this.blocks[i] instanceof spine_2.Spine) {
                         this._isGameOver = true;
                         break;
                     }
                     let dir = 0;
+                    let right = this.blocks[i].rightIsBlock;
+                    let left = this.blocks[i].leftIsBlock;
+                    let up = this.blocks[i].upIsBlock;
+                    let down = this.blocks[i].downIsBlock;
                     if (this.ball.dx > 0) {
                         if (this.ball.dy > 0) {
-                            if (ry < ry) {
+                            if (left && down) {
+                                continue;
+                            }
+                            else if (left) {
+                                dir = 3;
+                            }
+                            else if (down) {
+                                dir = 2;
+                            }
+                            else if (ry < ry) {
                                 dir = 3;
                             }
                             else {
@@ -253,7 +274,16 @@ define("objectPool", ["require", "exports", "main", "camera", "trampoline", "bal
                             }
                         }
                         else {
-                            if (ry < -ry) {
+                            if (up && left) {
+                                continue;
+                            }
+                            else if (up) {
+                                dir = 2;
+                            }
+                            else if (left) {
+                                dir = 1;
+                            }
+                            else if (ry < -ry) {
                                 dir = 2;
                             }
                             else {
@@ -263,7 +293,16 @@ define("objectPool", ["require", "exports", "main", "camera", "trampoline", "bal
                     }
                     else {
                         if (this.ball.dy > 0) {
-                            if (ry < -ry) {
+                            if (right && down) {
+                                continue;
+                            }
+                            else if (right) {
+                                dir = 3;
+                            }
+                            else if (down) {
+                                dir = 0;
+                            }
+                            else if (ry < -ry) {
                                 dir = 3;
                             }
                             else {
@@ -271,7 +310,16 @@ define("objectPool", ["require", "exports", "main", "camera", "trampoline", "bal
                             }
                         }
                         else {
-                            if (ry < ry) {
+                            if (up && right) {
+                                continue;
+                            }
+                            else if (up) {
+                                dir = 0;
+                            }
+                            else if (right) {
+                                dir = 1;
+                            }
+                            else if (ry < ry) {
                                 dir = 0;
                             }
                             else {
@@ -482,7 +530,6 @@ define("ball", ["require", "exports", "game_object", "main"], function (require,
             else if (this.center.screenX + Ball.RADIUS > main_8.canvas.width) {
                 this._dx = -this._dx;
             }
-            this._dy -= 0.06;
             if (this._dx > Ball.MAX_SPEED) {
                 this._dx = Ball.MAX_SPEED;
             }
@@ -497,6 +544,7 @@ define("ball", ["require", "exports", "game_object", "main"], function (require,
             }
             this.abX += this._dx;
             this.abY += this._dy;
+            this._dy -= 0.06;
             //console.log(this.dy);
             super.update();
         }

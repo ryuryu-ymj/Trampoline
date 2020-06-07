@@ -95,22 +95,38 @@ export class ObjectPool {
         for (let i = 0; i < this.blocks.length; i++) {
             let rx = this.ball.center.abX - this.blocks[i].center.abX;
             let ry = this.ball.center.abY - this.blocks[i].center.abY;
-            if (rx >= - Block.WIDTH / 2 && rx <= Block.WIDTH / 2 &&
-                ry >= - Block.WIDTH / 2 && ry <= Block.WIDTH / 2) {
+            if (rx >= - Block.WIDTH / 2 - Ball.RADIUS && rx <= Block.WIDTH / 2 + Ball.RADIUS &&
+                ry >= - Block.WIDTH / 2 - Ball.RADIUS && ry <= Block.WIDTH / 2 + Ball.RADIUS) {
                 if (this.blocks[i] instanceof Spine) {
                     this._isGameOver = true;
                     break;
                 }
                 let dir = 0;
+                let right = this.blocks[i].rightIsBlock;
+                let left = this.blocks[i].leftIsBlock;
+                let up = this.blocks[i].upIsBlock;
+                let down = this.blocks[i].downIsBlock;
                 if (this.ball.dx > 0) {
                     if (this.ball.dy > 0) {
-                        if (ry < ry) {
+                        if (left && down) {
+                            continue;
+                        } else if (left) {
+                            dir = 3;
+                        } else if (down) {
+                            dir = 2;
+                        } else if (ry < ry) {
                             dir = 3;
                         } else {
                             dir = 2;
                         }
                     } else {
-                        if (ry < -ry) {
+                        if (up && left) {
+                            continue;
+                        } else if (up) {
+                            dir = 2;
+                        } else if (left) {
+                            dir = 1;
+                        } else if (ry < -ry) {
                             dir = 2;
                         } else {
                             dir = 1;
@@ -118,13 +134,25 @@ export class ObjectPool {
                     }
                 } else {
                     if (this.ball.dy > 0) {
-                        if (ry < -ry) {
+                        if (right && down) {
+                            continue;
+                        } else if (right) {
+                            dir = 3;
+                        } else if (down) {
+                            dir = 0;
+                        } else if (ry < -ry) {
                             dir = 3;
                         } else {
                             dir = 0;
                         }
                     } else {
-                        if (ry < ry) {
+                        if (up && right) {
+                            continue;
+                        } else if (up) {
+                            dir = 0;
+                        } else if (right) {
+                            dir = 1;
+                        } else if (ry < ry) {
                             dir = 0;
                         } else {
                             dir = 1;

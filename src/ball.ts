@@ -30,8 +30,7 @@ export class Ball extends GameObject {
         } else if (this.center.screenX + Ball.RADIUS > canvas.width) {
             this._dx = -this._dx;
         }
-
-        this._dy -= 0.06;
+        
         if (this._dx > Ball.MAX_SPEED) {
             this._dx = Ball.MAX_SPEED;
         }
@@ -46,6 +45,8 @@ export class Ball extends GameObject {
         }
         this.abX += this._dx;
         this.abY += this._dy;
+
+        this._dy -= 0.06;
 
         //console.log(this.dy);
         super.update();

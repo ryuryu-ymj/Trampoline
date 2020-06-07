@@ -54,7 +54,11 @@ export class Stage {
                 let abX = Number.parseInt(this.csvData[this.loadLine][1]);
                 switch (this.csvData[this.loadLine][0]) {
                     case "block":
-                        blocks.push(new Block(camera, abX, abY));
+                        let rightIsBlock = this.csvData[this.loadLine][3] == "true";
+                        let leftIsBlock = this.csvData[this.loadLine][4] == "true";
+                        let upIsBlock = this.csvData[this.loadLine][5] == "true";
+                        let downIsBlock = this.csvData[this.loadLine][6] == "true";
+                        blocks.push(new Block(camera, abX, abY, rightIsBlock, leftIsBlock, upIsBlock, downIsBlock));                        
                         break;
                     case "spine":
                         blocks.push(new Spine(camera, abX, abY));

@@ -7,7 +7,7 @@ export class Spine extends Block {
     shape:Point[];
     
     constructor(camera: Camera, abX: number, abY: number) {
-        super(camera, abX, abY);
+        super(camera, abX, abY, false, false, false, false);
         this.shape = new Array(8);
         const WIDTH = Block.WIDTH;
         this.shape[0] = new Point(0, WIDTH / 2);
