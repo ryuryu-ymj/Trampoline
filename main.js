@@ -113,7 +113,7 @@ define("stage", ["require", "exports", "block", "main", "spine"], function (requ
         startLoadingStage(stageNum) {
             // TODO 
             this._isLoading = true;
-            this.xhr.open("GET", "/stageData/stage" + ("00" + stageNum).slice(-2) + ".csv", true);
+            this.xhr.open("GET", "https://ryuryu-ymj.github.io/Trampoline/stageData/stage" + ("00" + stageNum).slice(-2) + ".csv", true);
             this.xhr.send();
             this.xhr.onload = (ev) => {
                 this._isLoading = false;
