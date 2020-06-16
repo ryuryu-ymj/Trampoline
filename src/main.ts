@@ -1,4 +1,5 @@
 import { ObjectPool } from "./objectPool";
+import { AssetManager } from "./assetManager";
 
 export let isMouseDown = false;
 export let isMousePressed = false;
@@ -10,6 +11,8 @@ export let mouseUpY = 0;
 
 export const canvas = <HTMLCanvasElement>document.getElementById('canvas');
 export const ctx = canvas.getContext('2d');
+export const asset = new AssetManager();
+asset.loadImage("ball.png");
 
 // マウス入力
 canvas.addEventListener("mousedown", (event: MouseEvent) => {
@@ -58,20 +61,25 @@ function render() {
 
     switch (state) {
         case 0:
-            objectPool = new ObjectPool();
-            objectPool.startLoadingStage();
-            state = 1;
-            break;
-        case 1:
-            if (objectPool.continueLoadingStage()) {
-                state = 2;
+            if (asset.update()) {
+                state++;
             }
             break;
+        case 1:
+            objectPool = new ObjectPool();
+            objectPool.startLoadingStage();
+            state++;
+            break;
         case 2:
-            objectPool.startStage();
-            state = 3;
+            if (objectPool.continueLoadingStage()) {
+                state++;
+            }
             break;
         case 3:
+            objectPool.startStage();
+            state++;
+            break;
+        case 4:
             objectPool.draw();
             objectPool.update();
             if (objectPool.isGameOver()) {

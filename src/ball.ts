@@ -1,5 +1,5 @@
 import { GameObject, Point } from "./game_object";
-import { ctx, canvas } from "./main";
+import { ctx, canvas, asset } from "./main";
 import { Camera } from "./camera";
 
 export class Ball extends GameObject {
@@ -11,6 +11,7 @@ export class Ball extends GameObject {
     private _dy = 0;
     get dx() { return this._dx }
     get dy() { return this._dy }
+    private img = asset.getImage("ball.png");
 
     constructor(camera: Camera) {
         super(camera, canvas.width / 2, canvas.height / 2);
@@ -18,10 +19,7 @@ export class Ball extends GameObject {
     }
 
     draw(): void {
-        ctx.fillStyle = "orange";
-        ctx.beginPath();
-        ctx.arc(this.center.screenX, this.center.screenY, Ball.RADIUS, 0, Math.PI * 2);
-        ctx.fill();
+        ctx.drawImage(this.img, this.center.screenX, this.center.screenY);
     }
 
     update(): void {
