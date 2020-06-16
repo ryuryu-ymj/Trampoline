@@ -24,7 +24,7 @@ export class Stage {
             for (let i = 0; i < lines.length; i++) {
                 this.csvData[i] = lines[i].split(",");
             }
-            console.log(this.csvData);
+            //console.log(this.csvData);
         };
         this.xhr.onerror = (ev) => {
             console.error("ステージの読み込みに失敗しました" + this.xhr.status);

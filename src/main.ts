@@ -1,5 +1,6 @@
 import { ObjectPool } from "./objectPool";
 import { AssetManager } from "./assetManager";
+import { MyCanvas } from "./myCanvas";
 
 export let isMouseDown = false;
 export let isMousePressed = false;
@@ -11,6 +12,7 @@ export let mouseUpY = 0;
 
 export const canvas = <HTMLCanvasElement>document.getElementById('canvas');
 export const ctx = canvas.getContext('2d');
+export const mcanvas = new MyCanvas();
 export const asset = new AssetManager();
 asset.loadImage("ball.png");
 
@@ -56,6 +58,7 @@ let objectPool: ObjectPool;
 let state = 0;
 
 function render() {
+    mcanvas.fitSize();
     // 画面のクリア
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 

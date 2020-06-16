@@ -1,3 +1,31 @@
+define("assetManager", ["require", "exports"], function (require, exports) {
+    "use strict";
+    Object.defineProperty(exports, "__esModule", { value: true });
+    class AssetManager {
+        constructor() {
+            this.imgs = new Array();
+            this.nameList = new Array();
+            this.loadCnt = 0;
+        }
+        loadImage(fileName) {
+            this.loadCnt++;
+            let img = new Image();
+            img.onload = () => {
+                this.loadCnt--;
+            };
+            img.src = "img/" + fileName;
+            this.imgs.push(img);
+            this.nameList.push(fileName);
+        }
+        update() {
+            return this.loadCnt == 0;
+        }
+        getImage(fileName) {
+            return this.imgs[this.nameList.findIndex(it => it == fileName)];
+        }
+    }
+    exports.AssetManager = AssetManager;
+});
 define("camera", ["require", "exports", "main"], function (require, exports, main_1) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
@@ -122,7 +150,7 @@ define("stage", ["require", "exports", "block", "main", "spine"], function (requ
                 for (let i = 0; i < lines.length; i++) {
                     this.csvData[i] = lines[i].split(",");
                 }
-                console.log(this.csvData);
+                //console.log(this.csvData);
             };
             this.xhr.onerror = (ev) => {
                 console.error("ステージの読み込みに失敗しました" + this.xhr.status);
@@ -369,7 +397,33 @@ define("objectPool", ["require", "exports", "main", "camera", "trampoline", "bal
     }
     exports.ObjectPool = ObjectPool;
 });
-define("main", ["require", "exports", "objectPool"], function (require, exports, objectPool_1) {
+define("myCanvas", ["require", "exports", "main"], function (require, exports, main_7) {
+    "use strict";
+    Object.defineProperty(exports, "__esModule", { value: true });
+    class MyCanvas {
+        constructor() {
+            this.canvas = document.getElementById('canvas');
+            this.ctx = this.canvas.getContext('2d');
+            this.WIDTH = 400;
+            this.HEIGHT = 711;
+        }
+        /** 画面サイズに合わせてcanvasのサイズを調整する */
+        fitSize() {
+            let unit = Math.min(document.body.offsetWidth / 9, document.documentElement.clientHeight * 0.95 / 16);
+            this.canvas.width = unit * 9;
+            this.canvas.height = unit * 16;
+        }
+        drawImage(image, x, y, width, height) {
+            let cx = x * main_7.canvas.width / this.WIDTH;
+            let cy = y * main_7.canvas.height / this.HEIGHT;
+            let cw = width * main_7.canvas.width / this.WIDTH;
+            let ch = height * main_7.canvas.height / this.HEIGHT;
+            main_7.ctx.drawImage(image, cx, cy, cw, ch);
+        }
+    }
+    exports.MyCanvas = MyCanvas;
+});
+define("main", ["require", "exports", "objectPool", "assetManager", "myCanvas"], function (require, exports, objectPool_1, assetManager_1, myCanvas_1) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.isMouseDown = false;
@@ -381,6 +435,9 @@ define("main", ["require", "exports", "objectPool"], function (require, exports,
     exports.mouseUpY = 0;
     exports.canvas = document.getElementById('canvas');
     exports.ctx = exports.canvas.getContext('2d');
+    exports.mcanvas = new myCanvas_1.MyCanvas();
+    exports.asset = new assetManager_1.AssetManager();
+    exports.asset.loadImage("ball.png");
     // マウス入力
     exports.canvas.addEventListener("mousedown", (event) => {
         exports.isMouseDown = true;
@@ -420,24 +477,30 @@ define("main", ["require", "exports", "objectPool"], function (require, exports,
     let objectPool;
     let state = 0;
     function render() {
+        exports.mcanvas.fitSize();
         // 画面のクリア
         exports.ctx.clearRect(0, 0, exports.canvas.width, exports.canvas.height);
         switch (state) {
             case 0:
-                objectPool = new objectPool_1.ObjectPool();
-                objectPool.startLoadingStage();
-                state = 1;
-                break;
-            case 1:
-                if (objectPool.continueLoadingStage()) {
-                    state = 2;
+                if (exports.asset.update()) {
+                    state++;
                 }
                 break;
+            case 1:
+                objectPool = new objectPool_1.ObjectPool();
+                objectPool.startLoadingStage();
+                state++;
+                break;
             case 2:
-                objectPool.startStage();
-                state = 3;
+                if (objectPool.continueLoadingStage()) {
+                    state++;
+                }
                 break;
             case 3:
+                objectPool.startStage();
+                state++;
+                break;
+            case 4:
                 objectPool.draw();
                 objectPool.update();
                 if (objectPool.isGameOver()) {
@@ -453,7 +516,7 @@ define("main", ["require", "exports", "objectPool"], function (require, exports,
     }
     render();
 });
-define("game_object", ["require", "exports", "main"], function (require, exports, main_7) {
+define("game_object", ["require", "exports", "main"], function (require, exports, main_8) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     class GameObject {
@@ -464,8 +527,8 @@ define("game_object", ["require", "exports", "main"], function (require, exports
             this.points = new Array();
         }
         setScreenPosition(screenX, screenY) {
-            this.abX = screenX + this.camera.abX - main_7.canvas.width / 2;
-            this.abY = -screenY + this.camera.abY + main_7.canvas.height / 2;
+            this.abX = screenX + this.camera.abX - main_8.canvas.width / 2;
+            this.abY = -screenY + this.camera.abY + main_8.canvas.height / 2;
         }
         setPoint(point) {
             this.points[0] = point;
@@ -476,8 +539,8 @@ define("game_object", ["require", "exports", "main"], function (require, exports
             this.update();
         }
         update() {
-            let screenX = this.abX - this.camera.abX + main_7.canvas.width / 2;
-            let screenY = -this.abY + this.camera.abY + main_7.canvas.height / 2;
+            let screenX = this.abX - this.camera.abX + main_8.canvas.width / 2;
+            let screenY = -this.abY + this.camera.abY + main_8.canvas.height / 2;
             this.points.forEach(it => it.update(this.abX, this.abY, screenX, screenY));
         }
     }
@@ -504,30 +567,28 @@ define("game_object", ["require", "exports", "main"], function (require, exports
     }
     exports.Point = Point;
 });
-define("ball", ["require", "exports", "game_object", "main"], function (require, exports, game_object_4, main_8) {
+define("ball", ["require", "exports", "game_object", "main"], function (require, exports, game_object_4, main_9) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     class Ball extends game_object_4.GameObject {
         constructor(camera) {
-            super(camera, main_8.canvas.width / 2, main_8.canvas.height / 2);
+            super(camera, main_9.canvas.width / 2, main_9.canvas.height / 2);
             this.center = new game_object_4.Point(0, 0);
             this._dx = 0;
             this._dy = 0;
+            this.img = main_9.asset.getImage("ball.png");
             this.setPoint(this.center);
         }
         get dx() { return this._dx; }
         get dy() { return this._dy; }
         draw() {
-            main_8.ctx.fillStyle = "orange";
-            main_8.ctx.beginPath();
-            main_8.ctx.arc(this.center.screenX, this.center.screenY, Ball.RADIUS, 0, Math.PI * 2);
-            main_8.ctx.fill();
+            main_9.mcanvas.drawImage(this.img, this.center.screenX, this.center.screenY, Ball.RADIUS * 2, Ball.RADIUS * 2);
         }
         update() {
             if (this.center.screenX - Ball.RADIUS < 0) {
                 this._dx = -this._dx;
             }
-            else if (this.center.screenX + Ball.RADIUS > main_8.canvas.width) {
+            else if (this.center.screenX + Ball.RADIUS > main_9.canvas.width) {
                 this._dx = -this._dx;
             }
             if (this._dx > Ball.MAX_SPEED) {

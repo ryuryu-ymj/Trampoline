@@ -1,5 +1,5 @@
 import { GameObject, Point } from "./game_object";
-import { ctx, canvas, asset } from "./main";
+import { ctx, canvas, asset, mcanvas } from "./main";
 import { Camera } from "./camera";
 
 export class Ball extends GameObject {
@@ -19,7 +19,7 @@ export class Ball extends GameObject {
     }
 
     draw(): void {
-        ctx.drawImage(this.img, this.center.screenX, this.center.screenY);
+        mcanvas.drawImage(this.img, this.center.screenX, this.center.screenY, Ball.RADIUS * 2, Ball.RADIUS * 2);
     }
 
     update(): void {
