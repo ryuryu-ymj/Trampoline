@@ -1,4 +1,3 @@
-import { GameObject } from "./game_object";
 import { Block } from "./block";
 import { Camera } from "./camera";
 import { canvas } from "./main";
@@ -41,8 +40,8 @@ export class Stage {
     }
 
     addBlock(blocks: Block[], camera: Camera) {
-        if (camera.abY > this.loadAbY - canvas.height / 2) {
-            this.loadAbY += canvas.height / 2;
+        if (camera.abY > this.loadAbY - canvas.HEIGHT / 2) {
+            this.loadAbY += canvas.HEIGHT / 2;
             while (true) {
                 if (this.loadLine >= this.csvData.length) {
                     break;

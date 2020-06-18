@@ -1,5 +1,5 @@
 import { GameObject, Point } from "./game_object";
-import { ctx, canvas, asset, mcanvas } from "./main";
+import { canvas, asset } from "./main";
 import { Camera } from "./camera";
 
 export class Ball extends GameObject {
@@ -14,18 +14,18 @@ export class Ball extends GameObject {
     private img = asset.getImage("ball.png");
 
     constructor(camera: Camera) {
-        super(camera, canvas.width / 2, canvas.height / 2);
+        super(camera, canvas.WIDTH / 2, canvas.HEIGHT / 2);
         this.setPoint(this.center);
     }
 
     draw(): void {
-        mcanvas.drawImage(this.img, this.center.screenX, this.center.screenY, Ball.RADIUS * 2, Ball.RADIUS * 2);
+        //mcanvas.drawImage(this.img, this.center.screenX, this.center.screenY, Ball.RADIUS * 2, Ball.RADIUS * 2);
     }
 
     update(): void {
         if (this.center.screenX - Ball.RADIUS < 0) {
             this._dx = -this._dx;
-        } else if (this.center.screenX + Ball.RADIUS > canvas.width) {
+        } else if (this.center.screenX + Ball.RADIUS > canvas.WIDTH) {
             this._dx = -this._dx;
         }
         

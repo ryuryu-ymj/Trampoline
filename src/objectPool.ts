@@ -1,10 +1,11 @@
-import { ctx, canvas, isMouseUp, mouseUpX, mouseDownY, mouseDownX, mouseUpY } from "./main";
+import { canvas } from "./main";
 import { Camera } from "./camera";
 import { Trampoline } from "./trampoline";
 import { Ball } from "./ball";
 import { Block } from "./block";
 import { Stage } from "./stage";
 import { Spine } from "./spine";
+import { isMouseUp, mouseDownX, mouseDownY, mouseUpX, mouseUpY } from "./myCanvas";
 
 export class ObjectPool {
     private previousTime = new Date().getTime();
@@ -40,18 +41,6 @@ export class ObjectPool {
         this.blocks.forEach(it => it.draw());
         this.trampolines.forEach(it => it.draw());
         this.ball.draw();
-
-        ctx.strokeStyle = "gray";
-        ctx.beginPath();
-        for (let x = 100 - this.camera.abX % 100; x < canvas.width; x += 100) {
-            ctx.moveTo(x, 0);
-            ctx.lineTo(x, canvas.height);
-        }
-        for (let y = 100 - this.camera.abY % 100; y < canvas.height; y += 100) {
-            ctx.moveTo(0, canvas.height - y);
-            ctx.lineTo(canvas.width, canvas.height - y);
-        }
-        ctx.stroke();
     }
 
     update() {
@@ -64,7 +53,7 @@ export class ObjectPool {
 
         this.stage.addBlock(this.blocks, this.camera);
         {
-            if (this.blocks.some(it => { return it.center.screenY - Block.WIDTH / 2 > canvas.height })) {
+            if (this.blocks.some(it => { return it.center.screenY - Block.WIDTH / 2 > canvas.HEIGHT })) {
                 this.blocks.shift();
                 //console.log("delete block");
             }
@@ -185,7 +174,7 @@ export class ObjectPool {
         this.trampolines.forEach(it => it.update());
         this.blocks.forEach(it => it.update());
 
-        if (this.ball.center.screenY > canvas.height) {
+        if (this.ball.center.screenY > canvas.HEIGHT) {
             this._isGameOver = true;
         }
     }

@@ -31,8 +31,8 @@ define("camera", ["require", "exports", "main"], function (require, exports, mai
     Object.defineProperty(exports, "__esModule", { value: true });
     class Camera {
         constructor() {
-            this.abX = main_1.canvas.width / 2;
-            this.abY = main_1.canvas.height / 2;
+            this.abX = main_1.canvas.WIDTH / 2;
+            this.abY = main_1.canvas.HEIGHT / 2;
         }
     }
     exports.Camera = Camera;
@@ -41,20 +41,15 @@ define("trampoline", ["require", "exports", "game_object", "main"], function (re
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     class Trampoline extends game_object_1.GameObject {
-        constructor(camera, beginScreenX, beginScreenY, endScreenX, endScreenY) {
-            super(camera, 0, 0);
+        constructor(camera, beginCanvasX, beginCanvasY, endCanvasX, endCanvasY) {
+            super(camera, main_2.canvas.getAbXFromCanvas(camera, beginCanvasX), main_2.canvas.getAbYFromCanvas(camera, beginCanvasY));
             this.counter = 0;
-            this.setScreenPosition(beginScreenX, beginScreenY);
             this.begin = new game_object_1.Point(0, 0);
-            this.end = new game_object_1.Point(endScreenX - beginScreenX, -endScreenY + beginScreenY);
+            this.end = new game_object_1.Point(main_2.canvas.getAbXFromCanvas(camera, endCanvasX) - this.abX, main_2.canvas.getAbYFromCanvas(camera, endCanvasY) - this.abY);
             this.setPoints([this.begin, this.end]);
         }
         draw() {
-            main_2.ctx.strokeStyle = "green";
-            main_2.ctx.beginPath();
-            main_2.ctx.moveTo(this.begin.screenX, this.begin.screenY);
-            main_2.ctx.lineTo(this.end.screenX, this.end.screenY);
-            main_2.ctx.stroke();
+            main_2.canvas.drawLine("green", this.begin.screenX, this.begin.screenY, this.end.screenX, this.end.screenY);
         }
         update() {
             this.counter++;
@@ -75,7 +70,7 @@ define("trampoline", ["require", "exports", "game_object", "main"], function (re
     }
     exports.Trampoline = Trampoline;
 });
-define("block", ["require", "exports", "game_object", "main"], function (require, exports, game_object_2, main_3) {
+define("block", ["require", "exports", "game_object"], function (require, exports, game_object_2) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     class Block extends game_object_2.GameObject {
@@ -89,44 +84,24 @@ define("block", ["require", "exports", "game_object", "main"], function (require
             this.setPoint(this.center);
         }
         draw() {
-            main_3.ctx.fillStyle = "brown";
-            main_3.ctx.fillRect(this.center.screenX - Block.WIDTH / 2, this.center.screenY - Block.WIDTH / 2, Block.WIDTH, Block.WIDTH);
         }
     }
     exports.Block = Block;
     Block.WIDTH = 20;
 });
-define("spine", ["require", "exports", "block", "main", "game_object"], function (require, exports, block_1, main_4, game_object_3) {
+define("spine", ["require", "exports", "block"], function (require, exports, block_1) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     class Spine extends block_1.Block {
         constructor(camera, abX, abY) {
             super(camera, abX, abY, false, false, false, false);
-            this.shape = new Array(8);
-            const WIDTH = block_1.Block.WIDTH;
-            this.shape[0] = new game_object_3.Point(0, WIDTH / 2);
-            this.shape[1] = new game_object_3.Point(WIDTH / 6, WIDTH / 6);
-            this.shape[2] = new game_object_3.Point(WIDTH / 2, 0);
-            this.shape[3] = new game_object_3.Point(WIDTH / 6, -WIDTH / 6);
-            this.shape[4] = new game_object_3.Point(0, -WIDTH / 2);
-            this.shape[5] = new game_object_3.Point(-WIDTH / 6, -WIDTH / 6);
-            this.shape[6] = new game_object_3.Point(-WIDTH / 2, 0);
-            this.shape[7] = new game_object_3.Point(-WIDTH / 6, WIDTH / 6);
-            this.setPoints(this.shape);
         }
         draw() {
-            main_4.ctx.fillStyle = "gray";
-            main_4.ctx.beginPath();
-            main_4.ctx.moveTo(this.shape[0].screenX, this.shape[0].screenY);
-            for (let i = 1; i < this.shape.length; i++) {
-                main_4.ctx.lineTo(this.shape[i].screenX, this.shape[i].screenY);
-            }
-            main_4.ctx.fill();
         }
     }
     exports.Spine = Spine;
 });
-define("stage", ["require", "exports", "block", "main", "spine"], function (require, exports, block_2, main_5, spine_1) {
+define("stage", ["require", "exports", "block", "main", "spine"], function (require, exports, block_2, main_3, spine_1) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     class Stage {
@@ -166,8 +141,8 @@ define("stage", ["require", "exports", "block", "main", "spine"], function (requ
             }*/
         }
         addBlock(blocks, camera) {
-            if (camera.abY > this.loadAbY - main_5.canvas.height / 2) {
-                this.loadAbY += main_5.canvas.height / 2;
+            if (camera.abY > this.loadAbY - main_3.canvas.HEIGHT / 2) {
+                this.loadAbY += main_3.canvas.HEIGHT / 2;
                 while (true) {
                     if (this.loadLine >= this.csvData.length) {
                         break;
@@ -196,7 +171,102 @@ define("stage", ["require", "exports", "block", "main", "spine"], function (requ
     }
     exports.Stage = Stage;
 });
-define("objectPool", ["require", "exports", "main", "camera", "trampoline", "ball", "block", "stage", "spine"], function (require, exports, main_6, camera_1, trampoline_1, ball_1, block_3, stage_1, spine_2) {
+define("myCanvas", ["require", "exports"], function (require, exports) {
+    "use strict";
+    Object.defineProperty(exports, "__esModule", { value: true });
+    exports.isMouseDown = false;
+    exports.isMousePressed = false;
+    exports.isMouseUp = false;
+    exports.mouseDownX = 0;
+    exports.mouseDownY = 0;
+    exports.mouseUpX = 0;
+    exports.mouseUpY = 0;
+    class MyCanvas {
+        constructor() {
+            this.canvas = document.getElementById('canvas');
+            this.ctx = this.canvas.getContext('2d');
+            this.WIDTH = 400;
+            this.HEIGHT = 711;
+            // マウス入力
+            this.canvas.addEventListener("mousedown", (event) => {
+                exports.isMouseDown = true;
+                exports.isMousePressed = true;
+                exports.mouseDownX = event.pageX;
+                exports.mouseDownY = event.pageY;
+                //console.log("mousedown" + mouseDownX + ", " + mouseDownY);
+            });
+            this.canvas.addEventListener("mouseup", (event) => {
+                if (exports.isMousePressed) {
+                    exports.isMouseUp = true;
+                    exports.isMousePressed = false;
+                    exports.mouseUpX = event.pageX;
+                    exports.mouseUpY = event.pageY;
+                    //console.log("mouseup" + mouseUpX + ", " + mouseUpY);
+                }
+            });
+            this.canvas.addEventListener("mouseleave", (event) => {
+                if (exports.isMousePressed) {
+                    exports.isMouseUp = true;
+                    exports.isMousePressed = false;
+                    exports.mouseUpX = event.pageX;
+                    exports.mouseUpY = event.pageY;
+                    //console.log("mouseleave" + mouseUpX + ", " + mouseUpY);
+                }
+            });
+            // タッチ入力
+            /*this.canvas.addEventListener("touchstart", touchStart);
+            function touchStart(event: TouchEvent) {
+                if (event.targetTouches[0].pageX < this.canvas.width / 2) inputL = true;
+                else inputR = true;
+            }
+            this.canvas.addEventListener("touchend", () => {
+                inputL = false;
+                inputR = false;
+            });*/
+        }
+        /** 更新処理　毎フレーム呼ぶ必要がある */
+        begin() {
+            // 画面サイズに合わせてcanvasのサイズを調整する
+            let unit = Math.min(document.body.offsetWidth / 9, document.documentElement.clientHeight * 0.95 / 16);
+            this.canvas.width = unit * 9;
+            this.canvas.height = unit * 16;
+            // 画面のクリア
+            this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+        }
+        end() {
+            if (exports.isMouseDown)
+                exports.isMouseDown = false;
+            if (exports.isMouseUp)
+                exports.isMouseUp = false;
+        }
+        drawImage(image, x, y, width, height, margin = 0) {
+            let cmargin = margin * this.canvas.width / this.WIDTH;
+            let cx = x * this.canvas.width / this.WIDTH - cmargin;
+            let cy = y * this.canvas.height / this.HEIGHT - cmargin;
+            let cw = width * this.canvas.width / this.WIDTH + cmargin * 2;
+            let ch = height * this.canvas.height / this.HEIGHT + cmargin * 2;
+            this.ctx.drawImage(image, cx, cy, cw, ch);
+        }
+        drawLine(color, x1, y1, x2, y2) {
+            let cx1 = x1 * this.canvas.width / this.WIDTH;
+            let cy1 = y1 * this.canvas.height / this.HEIGHT;
+            let cx2 = x2 * this.canvas.width / this.WIDTH;
+            let cy2 = y2 * this.canvas.height / this.HEIGHT;
+            this.ctx.strokeStyle = color;
+            this.ctx.moveTo(cx1, cy1);
+            this.ctx.lineTo(cx2, cy2);
+            this.ctx.stroke();
+        }
+        getAbXFromCanvas(camera, canvasX) {
+            return camera.abX - this.WIDTH / 2 + canvasX * this.WIDTH / this.canvas.width;
+        }
+        getAbYFromCanvas(camera, canvasY) {
+            return camera.abY + this.HEIGHT / 2 - canvasY * this.HEIGHT / this.canvas.height;
+        }
+    }
+    exports.MyCanvas = MyCanvas;
+});
+define("objectPool", ["require", "exports", "main", "camera", "trampoline", "ball", "block", "stage", "spine", "myCanvas"], function (require, exports, main_4, camera_1, trampoline_1, ball_1, block_3, stage_1, spine_2, myCanvas_1) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     class ObjectPool {
@@ -226,17 +296,6 @@ define("objectPool", ["require", "exports", "main", "camera", "trampoline", "bal
             this.blocks.forEach(it => it.draw());
             this.trampolines.forEach(it => it.draw());
             this.ball.draw();
-            main_6.ctx.strokeStyle = "gray";
-            main_6.ctx.beginPath();
-            for (let x = 100 - this.camera.abX % 100; x < main_6.canvas.width; x += 100) {
-                main_6.ctx.moveTo(x, 0);
-                main_6.ctx.lineTo(x, main_6.canvas.height);
-            }
-            for (let y = 100 - this.camera.abY % 100; y < main_6.canvas.height; y += 100) {
-                main_6.ctx.moveTo(0, main_6.canvas.height - y);
-                main_6.ctx.lineTo(main_6.canvas.width, main_6.canvas.height - y);
-            }
-            main_6.ctx.stroke();
         }
         update() {
             //console.log(this.blocks.length);
@@ -247,14 +306,14 @@ define("objectPool", ["require", "exports", "main", "camera", "trampoline", "bal
             this.previousTime = presentTime;
             this.stage.addBlock(this.blocks, this.camera);
             {
-                if (this.blocks.some(it => { return it.center.screenY - block_3.Block.WIDTH / 2 > main_6.canvas.height; })) {
+                if (this.blocks.some(it => { return it.center.screenY - block_3.Block.WIDTH / 2 > main_4.canvas.HEIGHT; })) {
                     this.blocks.shift();
                     //console.log("delete block");
                 }
             }
             // trampolineの追加
-            if (main_6.isMouseUp) {
-                this.trampolines.push(new trampoline_1.Trampoline(this.camera, main_6.mouseDownX, main_6.mouseDownY, main_6.mouseUpX, main_6.mouseUpY));
+            if (myCanvas_1.isMouseUp) {
+                this.trampolines.push(new trampoline_1.Trampoline(this.camera, myCanvas_1.mouseDownX, myCanvas_1.mouseDownY, myCanvas_1.mouseUpX, myCanvas_1.mouseUpY));
             }
             // 一定時間経過後のtrampolineを消去
             if (this.trampolines.some(it => { return !it.isActive(); })) {
@@ -379,7 +438,7 @@ define("objectPool", ["require", "exports", "main", "camera", "trampoline", "bal
             this.ball.update();
             this.trampolines.forEach(it => it.update());
             this.blocks.forEach(it => it.update());
-            if (this.ball.center.screenY > main_6.canvas.height) {
+            if (this.ball.center.screenY > main_4.canvas.HEIGHT) {
                 this._isGameOver = true;
             }
         }
@@ -397,89 +456,16 @@ define("objectPool", ["require", "exports", "main", "camera", "trampoline", "bal
     }
     exports.ObjectPool = ObjectPool;
 });
-define("myCanvas", ["require", "exports", "main"], function (require, exports, main_7) {
+define("main", ["require", "exports", "objectPool", "assetManager", "myCanvas"], function (require, exports, objectPool_1, assetManager_1, myCanvas_2) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
-    class MyCanvas {
-        constructor() {
-            this.canvas = document.getElementById('canvas');
-            this.ctx = this.canvas.getContext('2d');
-            this.WIDTH = 400;
-            this.HEIGHT = 711;
-        }
-        /** 画面サイズに合わせてcanvasのサイズを調整する */
-        fitSize() {
-            let unit = Math.min(document.body.offsetWidth / 9, document.documentElement.clientHeight * 0.95 / 16);
-            this.canvas.width = unit * 9;
-            this.canvas.height = unit * 16;
-        }
-        drawImage(image, x, y, width, height) {
-            let cx = x * main_7.canvas.width / this.WIDTH;
-            let cy = y * main_7.canvas.height / this.HEIGHT;
-            let cw = width * main_7.canvas.width / this.WIDTH;
-            let ch = height * main_7.canvas.height / this.HEIGHT;
-            main_7.ctx.drawImage(image, cx, cy, cw, ch);
-        }
-    }
-    exports.MyCanvas = MyCanvas;
-});
-define("main", ["require", "exports", "objectPool", "assetManager", "myCanvas"], function (require, exports, objectPool_1, assetManager_1, myCanvas_1) {
-    "use strict";
-    Object.defineProperty(exports, "__esModule", { value: true });
-    exports.isMouseDown = false;
-    exports.isMousePressed = false;
-    exports.isMouseUp = false;
-    exports.mouseDownX = 0;
-    exports.mouseDownY = 0;
-    exports.mouseUpX = 0;
-    exports.mouseUpY = 0;
-    exports.canvas = document.getElementById('canvas');
-    exports.ctx = exports.canvas.getContext('2d');
-    exports.mcanvas = new myCanvas_1.MyCanvas();
+    exports.canvas = new myCanvas_2.MyCanvas();
     exports.asset = new assetManager_1.AssetManager();
     exports.asset.loadImage("ball.png");
-    // マウス入力
-    exports.canvas.addEventListener("mousedown", (event) => {
-        exports.isMouseDown = true;
-        exports.isMousePressed = true;
-        exports.mouseDownX = event.pageX;
-        exports.mouseDownY = event.pageY;
-        //console.log("mousedown" + mouseDownX + ", " + mouseDownY);
-    });
-    exports.canvas.addEventListener("mouseup", (event) => {
-        if (exports.isMousePressed) {
-            exports.isMouseUp = true;
-            exports.isMousePressed = false;
-            exports.mouseUpX = event.pageX;
-            exports.mouseUpY = event.pageY;
-            //console.log("mouseup" + mouseUpX + ", " + mouseUpY);
-        }
-    });
-    exports.canvas.addEventListener("mouseleave", (event) => {
-        if (exports.isMousePressed) {
-            exports.isMouseUp = true;
-            exports.isMousePressed = false;
-            exports.mouseUpX = event.pageX;
-            exports.mouseUpY = event.pageY;
-            //console.log("mouseleave" + mouseUpX + ", " + mouseUpY);
-        }
-    });
-    // タッチ入力
-    /*canvas.addEventListener("touchstart", touchStart);
-    function touchStart(event: TouchEvent) {
-        if (event.targetTouches[0].pageX < canvas.width / 2) inputL = true;
-        else inputR = true;
-    }
-    canvas.addEventListener("touchend", () => {
-        inputL = false;
-        inputR = false;
-    });*/
     let objectPool;
     let state = 0;
     function render() {
-        exports.mcanvas.fitSize();
-        // 画面のクリア
-        exports.ctx.clearRect(0, 0, exports.canvas.width, exports.canvas.height);
+        exports.canvas.begin();
         switch (state) {
             case 0:
                 if (exports.asset.update()) {
@@ -508,15 +494,12 @@ define("main", ["require", "exports", "objectPool", "assetManager", "myCanvas"],
                 }
                 break;
         }
-        if (exports.isMouseDown)
-            exports.isMouseDown = false;
-        if (exports.isMouseUp)
-            exports.isMouseUp = false;
+        exports.canvas.end();
         window.requestAnimationFrame(render);
     }
     render();
 });
-define("game_object", ["require", "exports", "main"], function (require, exports, main_8) {
+define("game_object", ["require", "exports", "main"], function (require, exports, main_5) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     class GameObject {
@@ -525,10 +508,6 @@ define("game_object", ["require", "exports", "main"], function (require, exports
             this.abX = abX;
             this.abY = abY;
             this.points = new Array();
-        }
-        setScreenPosition(screenX, screenY) {
-            this.abX = screenX + this.camera.abX - main_8.canvas.width / 2;
-            this.abY = -screenY + this.camera.abY + main_8.canvas.height / 2;
         }
         setPoint(point) {
             this.points[0] = point;
@@ -539,8 +518,8 @@ define("game_object", ["require", "exports", "main"], function (require, exports
             this.update();
         }
         update() {
-            let screenX = this.abX - this.camera.abX + main_8.canvas.width / 2;
-            let screenY = -this.abY + this.camera.abY + main_8.canvas.height / 2;
+            let screenX = this.abX - this.camera.abX + main_5.canvas.WIDTH / 2;
+            let screenY = -this.abY + this.camera.abY + main_5.canvas.HEIGHT / 2;
             this.points.forEach(it => it.update(this.abX, this.abY, screenX, screenY));
         }
     }
@@ -567,28 +546,28 @@ define("game_object", ["require", "exports", "main"], function (require, exports
     }
     exports.Point = Point;
 });
-define("ball", ["require", "exports", "game_object", "main"], function (require, exports, game_object_4, main_9) {
+define("ball", ["require", "exports", "game_object", "main"], function (require, exports, game_object_3, main_6) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
-    class Ball extends game_object_4.GameObject {
+    class Ball extends game_object_3.GameObject {
         constructor(camera) {
-            super(camera, main_9.canvas.width / 2, main_9.canvas.height / 2);
-            this.center = new game_object_4.Point(0, 0);
+            super(camera, main_6.canvas.WIDTH / 2, main_6.canvas.HEIGHT / 2);
+            this.center = new game_object_3.Point(0, 0);
             this._dx = 0;
             this._dy = 0;
-            this.img = main_9.asset.getImage("ball.png");
+            this.img = main_6.asset.getImage("ball.png");
             this.setPoint(this.center);
         }
         get dx() { return this._dx; }
         get dy() { return this._dy; }
         draw() {
-            main_9.mcanvas.drawImage(this.img, this.center.screenX, this.center.screenY, Ball.RADIUS * 2, Ball.RADIUS * 2);
+            //mcanvas.drawImage(this.img, this.center.screenX, this.center.screenY, Ball.RADIUS * 2, Ball.RADIUS * 2);
         }
         update() {
             if (this.center.screenX - Ball.RADIUS < 0) {
                 this._dx = -this._dx;
             }
-            else if (this.center.screenX + Ball.RADIUS > main_9.canvas.width) {
+            else if (this.center.screenX + Ball.RADIUS > main_6.canvas.WIDTH) {
                 this._dx = -this._dx;
             }
             if (this._dx > Ball.MAX_SPEED) {

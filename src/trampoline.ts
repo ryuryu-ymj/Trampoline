@@ -1,6 +1,6 @@
 import { GameObject, Point } from "./game_object";
 import { Camera } from "./camera";
-import { ctx } from "./main";
+import { canvas } from "./main";
 
 export class Trampoline extends GameObject {
     public begin: Point;
@@ -8,20 +8,15 @@ export class Trampoline extends GameObject {
 
     counter = 0;
 
-    constructor(camera: Camera, beginScreenX: number, beginScreenY: number, endScreenX: number, endScreenY: number) {
-        super(camera, 0, 0);
-        this.setScreenPosition(beginScreenX, beginScreenY);
+    constructor(camera: Camera, beginCanvasX: number, beginCanvasY: number, endCanvasX: number, endCanvasY: number) {
+        super(camera, canvas.getAbXFromCanvas(camera, beginCanvasX), canvas.getAbYFromCanvas(camera, beginCanvasY));
         this.begin = new Point(0, 0);
-        this.end = new Point(endScreenX - beginScreenX, -endScreenY + beginScreenY);
+        this.end = new Point(canvas.getAbXFromCanvas(camera, endCanvasX) - this.abX, canvas.getAbYFromCanvas(camera, endCanvasY) - this.abY);
         this.setPoints([this.begin, this.end]);
     }
 
     draw(): void {
-        ctx.strokeStyle = "green";
-        ctx.beginPath();
-        ctx.moveTo(this.begin.screenX, this.begin.screenY);
-        ctx.lineTo(this.end.screenX, this.end.screenY);
-        ctx.stroke();
+        canvas.drawLine("green", this.begin.screenX, this.begin.screenY, this.end.screenX, this.end.screenY);
     }
 
     update(): void {

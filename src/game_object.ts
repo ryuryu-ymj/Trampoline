@@ -6,11 +6,6 @@ export abstract class GameObject {
 
     constructor(private camera: Camera, protected abX: number, protected abY: number) { }
 
-    setScreenPosition(screenX: number, screenY: number) {
-        this.abX = screenX + this.camera.abX - canvas.width / 2;
-        this.abY = -screenY + this.camera.abY + canvas.height / 2;
-    }
-
     protected setPoint(point: Point) {
         this.points[0] = point;
         this.update();
@@ -23,8 +18,8 @@ export abstract class GameObject {
     abstract draw(): void;
     
     update() {
-        let screenX = this.abX - this.camera.abX + canvas.width / 2;
-        let screenY = -this.abY + this.camera.abY + canvas.height / 2;
+        let screenX = this.abX - this.camera.abX + canvas.WIDTH / 2;
+        let screenY = -this.abY + this.camera.abY + canvas.HEIGHT / 2;
         this.points.forEach(it => it.update(this.abX, this.abY, screenX, screenY));
     }
 }
